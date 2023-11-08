@@ -1,5 +1,6 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
-
+import java.util.ArrayList;
+import java.util.Collections;
 /**
  * Write a description of class MyWorld here.
  * 
@@ -8,26 +9,74 @@ import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
  */
 public class BattleWorld extends World
 {
-    private String hp; 
-    private SuperTextBox statBar; 
-    private SuperTextBox testBox; 
-    private Font sans_serif = new Font(24); 
-    private Font boringFont = new Font ("Times New Roman", false, false, 18);
-    /**
-     * Constructor for objects of class MyWorld.
-     * 
-     */
+
+    private ArrayList<Entity> entities = new ArrayList<Entity>();
+    private Side userSide;
+    private Side enemySide;
+    
+    private Side[] entireField;
+    
+    private boolean battling;
+    
     public BattleWorld()
     {    
         // Create a new world with 600x400 cells with a cell size of 1x1 pixels.
         super(1024, 800, 1); 
-        hp = "2111111";
+        setupField();
         
-        statBar = new SuperTextBox(hp, sans_serif, 200);
-        addObject(statBar, 100,200);
+    }
+    
+    public void setupField(){
+        userSide = new Side(0, 1);
+        enemySide = new Side(1, 6);
         
-        testBox = new SuperTextBox(hp, Color.BLACK, Color.WHITE, boringFont, true, 500, 3, Color.YELLOW);
-        addObject(testBox, 200,400);
+        entireField = new Side[]{userSide, enemySide};
+        
+        Slot[] userSideSlots = userSide.getSlots();
+        for(int i = 0; i < userSideSlots.length; i++){
+            Slot slot = userSideSlots[i];
+            addObject(slot, slot.peekX(), slot.peekY());
+        }
+        
+        Slot[] enemySideSlots = enemySide.getSlots();
+        for(int i = 0 ; i < enemySideSlots.length; i++){
+            Slot slot = enemySideSlots[i];
+            addObject(slot, slot.peekX(), slot.peekY());
+        }
+        startBattle();
+    }
+    
+    public void startBattle(){
+        battling = true;
+        
+        for(int i = 0; i < userSide.getSlots().length; i++){
+            UserChar uc = new UserChar();
+            addObject(uc, 0, 0);
+            uc.toSlot(userSide.getSlots()[i]);
+            entities.add(uc);
+        }
+        for(int i = 0; i < enemySide.getSlots().length; i++){
+            Cube cube = new Cube();
+            addObject(cube, 0, 0);
+            cube.toSlot(enemySide.getSlots()[i]);
+            entities.add(cube);
+        }
+        
+        Collections.sort(entities);
+    }
+    
+    public void battlePhase(){
+        int curAttacker = 0;
+        while(battling){ //WE NEED A WAY FOR GUYS TO DIE FIRST
+            Entity e = entities.get(curAttacker);
+            Side targetSide = entireField[1-e.getSide()];
+            Entity target = targetSide.getRandomEntity();
+            e.attack();
+            
+            
+            curAttacker++;
+            battling = false;
+        }
     }
     
 }
